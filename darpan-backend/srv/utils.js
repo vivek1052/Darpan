@@ -43,7 +43,7 @@ module.exports.getFilesMetadata = (_path) => {
 
     return JSON.parse(_response.toString());
   } catch (error) {
-    console.error(`No file found`);
+    console.error(error);
     return [];
   }
 };
