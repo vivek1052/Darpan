@@ -30,12 +30,10 @@ class DarpanService extends cds.ApplicationService {
     this.on(`Import`, (_req) => {
       const { folder } = _req.data;
       this.importAsync(folder);
-      return;
     });
     this.on(`Reindex`, _req => {
       const { hashes } = _req.data;
       this.reIndexAsync(hashes);
-      return;
     });
     this.on(`GetImportFolders`, this.onGetImportFolders);
     this.on(`SearchPlaces`, this.searchPlaces);
