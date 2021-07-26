@@ -1,0 +1,67 @@
+{
+  "name": "darpan-backend",
+  "version": "1.0.0",
+  "description": "A simple CAP project.",
+  "repository": "<Add your repository here>",
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "@sap/cds": "^5.3.1",
+    "axios": "^0.21.1",
+    "cookie-parser": "^1.4.5",
+    "dist-exiftool": "^10.53.0",
+    "dotenv": "^10.0.0",
+    "express": "^4",
+    "ffmpeg-static": "^4.4.0",
+    "ffprobe-static": "^3.0.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "jsonwebtoken": "^8.5.1",
+    "md5-file": "^5.0.0",
+    "moment": "^2.29.1",
+    "sqlite3": "^5.0.2",
+    "ws": "^7.5.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "cds run"
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "env": {
+      "es2020": true,
+      "node": true,
+      "jest": true,
+      "mocha": true
+    },
+    "globals": {
+      "SELECT": true,
+      "INSERT": true,
+      "UPDATE": true,
+      "DELETE": true,
+      "CREATE": true,
+      "DROP": true,
+      "CDL": true,
+      "CQL": true,
+      "CXL": true,
+      "cds": true
+    },
+    "rules": {
+      "no-console": "off",
+      "require-atomic-updates": "off"
+    }
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "model": "*",
+        "credentials": {
+          "database": ".\\db\\index.db"
+        }
+      },
+      "auth": {
+        "impl": "srv/auth.js"
+      }
+    }
+  }
+}

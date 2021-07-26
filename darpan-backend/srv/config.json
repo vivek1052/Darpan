@@ -1,0 +1,7 @@
+{
+  "importPath": "/Pictures/Import",
+  "exportPath": "/Pictures/Export",
+  "thumnailPath": "/Pictures/Thumbnails",
+  "staticMapPath": "/Pictures/StaticMaps",
+  "transcodedFormats": ["AVI","FLV"]
+}
