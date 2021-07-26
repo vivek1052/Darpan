@@ -1,4 +1,4 @@
-version: 3
+version: "3"
 
 services:
   darpan-nginx:
@@ -6,10 +6,14 @@ services:
     build: ./nginx
     ports:
       - "80:80"
+    volumes:
+      - "/mnt/crucial-500/Darpan-Pictures:/Pictures"
 
   darpan-backend:
     image: darpan/backend
     build: ./darpan-backend
+    volumes:
+      - "/mnt/crucial-500/Darpan-Pictures:/Pictures"
 
   darpan-authentication-server:
     image: darpan/authentication-server
