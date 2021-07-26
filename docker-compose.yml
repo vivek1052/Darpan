@@ -1,0 +1,16 @@
+version: 3
+
+services:
+  darpan-nginx:
+    image: darpan/nginx
+    build: ./nginx
+    ports:
+      - "80:80"
+
+  darpan-backend:
+    image: darpan/backend
+    build: ./darpan-backend
+
+  darpan-authentication-server:
+    image: darpan/authentication-server
+    build: ./darpan-authentication-server

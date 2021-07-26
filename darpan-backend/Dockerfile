@@ -2,14 +2,6 @@ FROM node:alpine
 
 WORKDIR /darpan-backend
 
-# RUN apk add --no-cache --virtual .gyp \
-#         python2 \
-#         make \
-#         g++ \
-#     && npm install \
-#         sqlite3 \
-#     && apk del .gyp
-
 RUN npm install -g @sap/cds-dk
 
 COPY ["package.json", "./"]
