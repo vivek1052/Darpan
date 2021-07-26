@@ -1,4 +1,3 @@
-require("dotenv").config();
 const cds = require("@sap/cds");
 const jwt = require(`jsonwebtoken`);
 const cookieParser = require(`cookie-parser`);

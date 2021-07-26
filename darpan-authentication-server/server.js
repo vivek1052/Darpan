@@ -1,4 +1,3 @@
-require("dotenv").config();
 const jwt = require(`jsonwebtoken`);
 const basicAuth = require(`basic-auth`);
 const bcrypt = require(`bcryptjs`);

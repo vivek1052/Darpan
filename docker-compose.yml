@@ -14,7 +14,12 @@ services:
     build: ./darpan-backend
     volumes:
       - "/mnt/crucial-500/Darpan-Pictures:/Pictures"
+    environment:
+      - SECRET="$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPd"
+      - MAPAPIKEY="MOI3HYNBtHgay8O6XUEnFT24lL8KMt1jWq8Zo4mHEm4"
 
   darpan-authentication-server:
     image: darpan/authentication-server
     build: ./darpan-authentication-server
+    environment:
+      - SECRET="$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPd"
