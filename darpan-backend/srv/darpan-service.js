@@ -98,13 +98,13 @@ class DarpanService extends cds.ApplicationService {
       }
 
       //Delete empty nested folders.
-      if (
-        fs.readdirSync(_importPath).length == 0 &&
-        path.join(_importPath) != path.join(config.importPath, "/")
-      ) {
-        console.log(`Deleting folder ${_importPath}`);
-        fs.rmdirSync(_importPath);
-      }
+//       if (
+//         fs.readdirSync(_importPath).length == 0 &&
+//         path.join(_importPath) != path.join(config.importPath, "/")
+//       ) {
+//         console.log(`Deleting folder ${_importPath}`);
+//         fs.rmdirSync(_importPath);
+//       }
     }
     return;
   }
