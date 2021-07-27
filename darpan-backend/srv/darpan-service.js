@@ -30,12 +30,10 @@ class DarpanService extends cds.ApplicationService {
     this.on(`Import`, (_req) => {
       const { folder } = _req.data;
       this.importAsync(folder);
-      return;
     });
     this.on(`Reindex`, _req => {
       const { hashes } = _req.data;
       this.reIndexAsync(hashes);
-      return;
     });
     this.on(`GetImportFolders`, this.onGetImportFolders);
     this.on(`SearchPlaces`, this.searchPlaces);
@@ -85,7 +83,7 @@ class DarpanService extends cds.ApplicationService {
 
         //Generate/Move relavent files
         try {
-          await this.fileOperations(_data, _fileMetadata);
+//           await this.fileOperations(_data, _fileMetadata);
         } catch (error) {
           console.log(error);
           continue;
@@ -100,13 +98,13 @@ class DarpanService extends cds.ApplicationService {
       }
 
       //Delete empty nested folders.
-      if (
-        fs.readdirSync(_importPath).length == 0 &&
-        path.join(_importPath) != path.join(config.importPath, "/")
-      ) {
-        console.log(`Deleting folder ${_importPath}`);
-        fs.rmdirSync(_importPath);
-      }
+//       if (
+//         fs.readdirSync(_importPath).length == 0 &&
+//         path.join(_importPath) != path.join(config.importPath, "/")
+//       ) {
+//         console.log(`Deleting folder ${_importPath}`);
+//         fs.rmdirSync(_importPath);
+//       }
     }
     return;
   }
