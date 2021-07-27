@@ -27,9 +27,9 @@ const status = Object.freeze({
 
 class DarpanService extends cds.ApplicationService {
   async init() {
-    this.on(`Import`, (_req) => {
+    this.on(`Import`, async (_req) => {
       const { folder } = _req.data;
-      this.importAsync(folder);
+      await this.importAsync(folder);
     });
     this.on(`Reindex`, _req => {
       const { hashes } = _req.data;
