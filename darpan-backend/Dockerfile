@@ -6,6 +6,8 @@ RUN npm install -g @sap/cds-dk
 
 COPY ["package.json", "./"]
 
+RUN apk add perl
+
 RUN apk add --no-cache --virtual .gyp \
         python2 \
         make \
