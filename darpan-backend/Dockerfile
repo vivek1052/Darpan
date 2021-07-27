@@ -17,7 +17,9 @@ RUN apk add --no-cache --virtual .gyp \
 
 COPY . .
 
-RUN cds deploy --to sqlite:./db/index.db
+RUN cds deploy --to sqlite:/darpan-backend/db/sqlite/index.db
+
+VOLUME /darpan-backend/db/sqlite
 
 RUN mkdir -p /Pictures/Import
 
