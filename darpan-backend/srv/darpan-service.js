@@ -28,13 +28,10 @@ const status = Object.freeze({
 class DarpanService extends cds.ApplicationService {
   async init() {
     this.on(`Import`, (_req) => {
-      const { folder } = _req.data;
-      this.importAsync(folder);
-      _req.reply('OK');
+      this.importAsync(_req);
     });
     this.on(`Reindex`, _req => {
-      const { hashes } = _req.data;
-      this.reIndexAsync(hashes);
+      this.reIndexAsync(_req);
     });
     this.on(`GetImportFolders`, this.onGetImportFolders);
     this.on(`SearchPlaces`, this.searchPlaces);
@@ -46,10 +43,12 @@ class DarpanService extends cds.ApplicationService {
   }
 
 
-  async importAsync(folder) {
+  async importAsync(req) {
     debugger;
 
-    const srv = await cds.connect.to('db');
+    const { folder } = req.data;
+
+    const _tx = this.tx(req);
 
     const _nestedFolders = utils.getDirRecursive(folder || "/");
 
@@ -70,21 +69,26 @@ class DarpanService extends cds.ApplicationService {
         const _hash = (await md5(_fileMetadata.SourceFile)).toUpperCase();
 
         //Check if file already exist
-        if (
-          await srv.read(srv.entities.Files).byKey(_hash)
-        ) {
-          this.log(
-            status.warn,
-            `${_fileMetadata.FileName} already exists!.`
-          );
-          continue;
+        try {
+          if (
+            await _tx.read(_tx.entities.Files).byKey(_hash)
+          ) {
+            this.log(
+              status.warn,
+              `${_fileMetadata.FileName} already exists!.`
+            );
+            continue;
+          }
+        } catch (error) {
+          debugger;
         }
+
 
         const _data = await this.transformData(_hash, _fileMetadata);
 
         //Generate/Move relavent files
         try {
-          //           await this.fileOperations(_data, _fileMetadata);
+          await this.fileOperations(_data, _fileMetadata);
         } catch (error) {
           console.log(error);
           continue;
@@ -92,21 +96,23 @@ class DarpanService extends cds.ApplicationService {
 
         //Update DB
         try {
-          await srv.create(srv.entities.Files).entries(_data);
+          await _tx.create(_tx.entities.Files).entries(_data);
+          await _tx.commit();
         } catch (error) {
           this.log(status.error, error);
+          return;
         }
       }
 
-      //Delete empty nested folders.
-      //       if (
-      //         fs.readdirSync(_importPath).length == 0 &&
-      //         path.join(_importPath) != path.join(config.importPath, "/")
-      //       ) {
-      //         console.log(`Deleting folder ${_importPath}`);
-      //         fs.rmdirSync(_importPath);
-      //       }
+      // Delete empty nested folders.
+      if (path.join(_importPath) != path.join(config.importPath, "/")) {
+        if (await (await fs.promises.readdir(_importPath)).length == 0) {
+          console.log(`Deleting folder ${_importPath}`);
+          await fs.promises.rmdir(_importPath);
+        }
+      }
     }
+
     return;
   }
 
@@ -252,15 +258,17 @@ class DarpanService extends cds.ApplicationService {
     return _data;
   }
 
-  async reIndexAsync(hashes) {
+  async reIndexAsync(req) {
     debugger;
 
-    const srv = await cds.connect.to('db');
+    const { hashes } = req.data;
+
+    const _tx = this.tx(req);
 
     if (hashes.length == 0) {
       return;
     }
-    const _files = await srv.read(srv.entities.Files).where({
+    const _files = await _tx.read(_tx.entities.Files).where({
       hash: hashes,
     });
 
@@ -276,9 +284,10 @@ class DarpanService extends cds.ApplicationService {
       if (_filesMetadata.length == 0) {
         console.error("File doesnt exist anymore. Deleting from database");
         try {
-          await srv.delete(srv.entities.Files).byKey({
+          await _tx.delete(_tx.entities.Files).byKey({
             hash: _file.hash,
           });
+          await _tx.commit();
           continue;
         } catch (error) {
           console.log(error);
@@ -301,16 +310,18 @@ class DarpanService extends cds.ApplicationService {
       //Crush update DB
       try {
         if (_data.addressCategories) {
-          await srv.delete(srv.entities.Address_Categories).where({
+          await _tx.delete(_tx.entities.Address_Categories).where({
             file_hash: _data.hash
           });
-          await srv.create(srv.entities.Address_Categories).entries(_data.addressCategories);
+          await _tx.create(_tx.entities.Address_Categories).entries(_data.addressCategories);
           delete _data.addressCategories;
         }
 
-        await srv.update(this.entities.Files, _data.hash).with(_data)
+        await _tx.update(this.entities.Files, _data.hash).with(_data);
+        await _tx.commit();
       } catch (error) {
         this.log(status.error, error);
+        await _tx.rollback();
       }
     }
     return;
@@ -325,7 +336,8 @@ class DarpanService extends cds.ApplicationService {
       _data.hash.slice(1, 2),
       _data.hash.slice(2, 3)
     );
-    fs.mkdirSync(_thumbnailPath, {
+
+    await fs.promises.mkdir(_thumbnailPath, {
       recursive: true,
     });
 
@@ -365,9 +377,12 @@ class DarpanService extends cds.ApplicationService {
         _data.hash.slice(1, 2),
         _data.hash.slice(2, 3)
       );
-      fs.mkdirSync(_staticMapPath, {
+
+      //Make thumbnail path
+      await fs.promises.mkdir(_staticMapPath, {
         recursive: true,
       });
+
       try {
         const res = await axios.get(`https://image.maps.ls.hereapi.com/mia/1.6/mapview`, {
           responseType: 'stream',
@@ -391,14 +406,13 @@ class DarpanService extends cds.ApplicationService {
     }
 
     //Create export path if not there
-    fs.mkdirSync(path.join(config.exportPath, _data.path), { recursive: true });
+    await fs.promises.mkdir(path.join(config.exportPath, _data.path), { recursive: true });
 
     //Move file
     this.log(status.info, `Moving file ${_fileMetadata.FileName}`);
-    fs.renameSync(
-      _fileMetadata.SourceFile,
-      path.join(config.exportPath, _data.path, _data.name)
-    );
+
+    await fs.promises.rename(_fileMetadata.SourceFile,
+      path.join(config.exportPath, _data.path, _data.name));
 
     return;
   }
@@ -510,12 +524,12 @@ class DarpanService extends cds.ApplicationService {
   async fileUpdateAsync(req) {
     if (req.context.event == 'Reindex') return;
 
-    const srv = await cds.connect.to('db');
+    const _tx = this.tx(req);
 
     debugger
     const { hash, takenDateTime, gps_latitudeRef, gps_latitude, gps_longitudeRef, gps_longitude } = req.data;
 
-    const _file = await srv.read(srv.entities.Files).byKey(hash);
+    const _file = await _tx.read(_tx.entities.Files).byKey(hash);
 
     if (takenDateTime) {
       const _args = [];
