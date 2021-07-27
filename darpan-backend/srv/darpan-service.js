@@ -27,9 +27,9 @@ const status = Object.freeze({
 
 class DarpanService extends cds.ApplicationService {
   async init() {
-    this.on(`Import`, async (_req) => {
+    this.on(`Import`, (_req) => {
       const { folder } = _req.data;
-      await this.importAsync(folder);
+      this.importAsync(folder);
     });
     this.on(`Reindex`, _req => {
       const { hashes } = _req.data;
@@ -83,7 +83,7 @@ class DarpanService extends cds.ApplicationService {
 
         //Generate/Move relavent files
         try {
-          await this.fileOperations(_data, _fileMetadata);
+//           await this.fileOperations(_data, _fileMetadata);
         } catch (error) {
           console.log(error);
           continue;
