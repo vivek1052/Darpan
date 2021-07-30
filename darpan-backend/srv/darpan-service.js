@@ -348,21 +348,34 @@ class DarpanService extends cds.ApplicationService {
         _scaleWidth = true;
       }
 
-      await this.generateImageThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, `${_data.hash}_240.jpg`), _scaleWidth ? '240x?' : '?x240', Number(_data.dimensions.orientation));
-      await this.generateImageThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, `${_data.hash}_1280.jpg`), _scaleWidth ? '?x1280' : '1280x?', Number(_data.dimensions.orientation));
+      try {
+        await this.generateImageThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, `${_data.hash}_240.jpg`), _scaleWidth ? '240x?' : '?x240', Number(_data.dimensions.orientation));
+        await this.generateImageThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, `${_data.hash}_1280.jpg`), _scaleWidth ? '?x1280' : '1280x?', Number(_data.dimensions.orientation));
+        console.log("Thumbnails generated");
+      } catch (error) {
+        console.error('Thumbnail couldnt be generated');
+      }
 
-      console.log("Thumbnails generated");
     }
     //Generate thumbnail for video.
     else if (_data.mimeType.startsWith(`video`)) {
 
-      console.log('Generating live video file');
-      await this.generateVideoThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `.mp4`));
+      try {
+        console.log('Generating live video file');
+        await this.generateVideoThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `.mp4`));
+      } catch (error) {
+        console.error('Couldnt generate live video file');
+      }
+
 
       //Transcode video other than mp4 in mp4
       if (config.transcodedFormats.includes(_data.format)) {
-        console.log(`Transcoding ${_fileMetadata.FileName} to MP4`);
-        await this.transcodeVideo(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `_transcoded.mp4`));
+        try {
+          console.log(`Transcoding ${_fileMetadata.FileName} to MP4`);
+          await this.transcodeVideo(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `_transcoded.mp4`));
+        } catch (error) {
+          console.log('Couldnt transcode video');
+        }
       }
     }
 

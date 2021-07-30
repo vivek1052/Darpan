@@ -7,13 +7,13 @@ services:
     ports:
       - "80:80"
     volumes:
-      - "/mnt/crucial-500/Darpan-Pictures:/Pictures"
+      - "/ext/Pictures:/Pictures"
 
   darpan-backend:
     image: darpan/backend
     build: ./darpan-backend
     volumes:
-      - "/mnt/crucial-500/Darpan-Pictures:/Pictures"
+      - "/ext/Pictures:/Pictures"
       - "darpanDB:/darpan-backend/db/sqlite"
     environment:
       - SECRET=$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPd

@@ -2,6 +2,10 @@ FROM node:alpine
 
 WORKDIR /darpan-backend
 
+RUN mkdir -p /Pictures/Import
+
+RUN mkdir -p /darpan-backend/db/sqlite
+
 RUN npm install -g @sap/cds-dk
 
 COPY ["package.json", "./"]
@@ -20,8 +24,6 @@ COPY . .
 RUN cds deploy --to sqlite:/darpan-backend/db/sqlite/index.db
 
 VOLUME /darpan-backend/db/sqlite
-
-RUN mkdir -p /Pictures/Import
 
 EXPOSE 4004
 
