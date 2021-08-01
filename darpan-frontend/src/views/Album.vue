@@ -5,6 +5,20 @@
       dense
       style="position: fixed; right: 20px; z-index: 2; border-radius: 25px"
     >
+      <v-tooltip v-if="photosSelected.length == 1" bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn
+            icon
+            v-on="on"
+            v-bind="attrs"
+            @click="onSetAlbumPhoto"
+            color="primary"
+          >
+            <v-icon>mdi-star-outline</v-icon>
+          </v-btn>
+        </template>
+        <span>Set Album Photo</span>
+      </v-tooltip>
       <v-tooltip bottom>
         <template v-slot:activator="{ on, attrs }">
           <v-btn
@@ -22,11 +36,17 @@
       <masslocation-edit :selectedPhotoGuids="photosSelected" />
       <mass-date-edit :selectedPhotoGuids="photosSelected" />
     </v-toolbar>
+    <v-row justify="center" class="ma-2 display-1">
+      {{ albumDetails.name }}
+    </v-row>
+    <v-row justify="center" class="ma-2 subtitle-1">
+      {{ albumDetails.description }}
+    </v-row>
+
     <v-row v-for="(section, i) in albumPhotos" :key="i">
       <v-col>
-        <v-row justify="center" class="mt-5">
-          <v-icon large>mdi-map-marker-outline</v-icon>
-          <h2 class="display-1">{{ section.city }}</h2>
+        <v-row justify="center" class="ma-2 display-1">
+          <v-icon large>mdi-map-marker-outline</v-icon> {{ section.city }}
         </v-row>
         <photo-section
           :files="section.files"
@@ -37,6 +57,7 @@
               lightBoxVisible = true;
             }
           "
+          @selectionChanged="selectionChanged"
         >
           <template v-slot:header>
             <h3 class="title">{{ parseDate(section.takenDate) }}</h3>
@@ -79,6 +100,7 @@ export default {
         sectionIndex: 0,
         photoIndex: 0,
       },
+      photosSelected: [],
     };
   },
   components: {
@@ -86,16 +108,6 @@ export default {
     masslocationEdit,
     massDateEdit,
     Lightbox,
-  },
-  computed: {
-    photosSelected: function () {
-      const _photosSelected = [];
-      for (const _section of this.albumPhotos) {
-        const _selPhotos = _section.files.filter((_file) => _file.selected);
-        _photosSelected.push(..._selPhotos.map((_selPhoto) => _selPhoto.hash));
-      }
-      return _photosSelected;
-    },
   },
   created() {
     this.fetchData();
@@ -140,11 +152,13 @@ export default {
         return r;
       }, {});
     },
-    selectionChange() {
-      this.photoSelectedCount = 0;
-      for (const sec of this.photoSelected) {
-        this.photoSelectedCount += sec.length;
+    selectionChanged() {
+      const _photosSelected = [];
+      for (const _section of this.albumPhotos) {
+        const _selPhotos = _section.files.filter((_file) => _file.selected);
+        _photosSelected.push(..._selPhotos.map((_selPhoto) => _selPhoto.hash));
       }
+      this.photosSelected = _photosSelected;
     },
 
     onReindex() {
@@ -165,6 +179,23 @@ export default {
           this.$toasted.error("Error occured");
         });
     },
+    onSetAlbumPhoto() {
+      axios
+        .get(`/darpan/Files/${this.photosSelected[0]}`)
+        .then((res) => {
+          return axios.patch(`/darpan/Albums/${this.albumID}`, {
+            albumSrc: res.data.UIpaths_srcSD,
+          });
+        })
+        .then((res) => {
+          this.$toasted.success("Updated");
+        })
+        .catch((err) => {
+          this.$toasted.error("Error occured");
+          this.console.log(err);
+        });
+    },
+
     onSwipeLeft() {
       if (this.lightBoxPhotoIndex.photoIndex == 0) {
         if (this.lightBoxPhotoIndex.sectionIndex != 0) {

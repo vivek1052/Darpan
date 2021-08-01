@@ -65,7 +65,7 @@ entity Files : managed {
 entity Albums : cuid, managed {
     name        : String(64);
     description : String(255);
-    DateTime    : Timestamp;
+    albumSrc    : String(255);
     files       : Composition of many Media_Album_Link
                       on files.album = $self;
 }

@@ -31,7 +31,8 @@ class DarpanService extends cds.ApplicationService {
       this.importAsync(_req);
     });
     this.on(`Reindex`, _req => {
-      this.reIndexAsync(_req);
+      const { hashes } = req.data;
+      this.reIndexAsync(_req, hashes);
     });
     this.on(`GetImportFolders`, this.onGetImportFolders);
     this.on(`SearchPlaces`, this.searchPlaces);
@@ -48,7 +49,7 @@ class DarpanService extends cds.ApplicationService {
 
     const { folder } = req.data;
 
-    const _tx = this.tx(req);
+    const _tx = cds.tx(req);
 
     const _nestedFolders = utils.getDirRecursive(folder || "/");
 
@@ -258,12 +259,10 @@ class DarpanService extends cds.ApplicationService {
     return _data;
   }
 
-  async reIndexAsync(req) {
+  async reIndexAsync(req, hashes) {
     debugger;
 
-    const { hashes } = req.data;
-
-    const _tx = this.tx(req);
+    const _tx = cds.tx(req);
 
     if (hashes.length == 0) {
       return;
@@ -310,9 +309,14 @@ class DarpanService extends cds.ApplicationService {
       //Crush update DB
       try {
         if (_data.addressCategories) {
-          await _tx.delete(_tx.entities.Address_Categories).where({
-            file_hash: _data.hash
-          });
+          try {
+            await _tx.delete(_tx.entities.Address_Categories).where({
+              file_hash: _data.hash
+            });
+          } catch (error) {
+            //Didnt exist
+          }
+
           await _tx.create(_tx.entities.Address_Categories).entries(_data.addressCategories);
           delete _data.addressCategories;
         }
@@ -537,7 +541,7 @@ class DarpanService extends cds.ApplicationService {
   async fileUpdateAsync(req) {
     if (req.context.event == 'Reindex') return;
 
-    const _tx = this.tx(req);
+    const _tx = cds.tx(req);
 
     debugger
     const { hash, takenDateTime, gps_latitudeRef, gps_latitude, gps_longitudeRef, gps_longitude } = req.data;
@@ -554,7 +558,7 @@ class DarpanService extends cds.ApplicationService {
         utils.updateExifProperty(path.join(config.exportPath, _file.path, _file.name), _args);
 
         //Reindex in order to move it to right folders and populate transient fields
-        this.reIndexAsync([hash]);
+        this.reIndexAsync(req, [hash]);
       }
     }
     if (gps_latitudeRef && gps_latitude && gps_longitudeRef && gps_longitude) {
@@ -568,7 +572,7 @@ class DarpanService extends cds.ApplicationService {
         utils.updateExifProperty(path.join(config.exportPath, _file.path, _file.name), _args);
 
         //Reindex in order to move it to right folders and populate transient fields
-        this.reIndexAsync([hash]);
+        this.reIndexAsync(req, [hash]);
       }
     }
     return;

@@ -31,17 +31,38 @@
         cols="6"
         class="col"
       >
-        <v-card height="200px">
+        <v-card>
           <v-checkbox
             v-model="selectedAlbums"
             :value="album.ID"
             light
             class="checkbox"
           ></v-checkbox>
-          <v-card-title @click="$router.push(`/Album/${album.ID}`)">{{
-            album.name
-          }}</v-card-title>
-          <v-card-subtitle>{{ album.description }}</v-card-subtitle>
+          <v-img
+            v-if="album.albumSrc != ''"
+            height="200px"
+            :src="'/thumb/' + album.albumSrc"
+            gradient="to bottom, rgba(0,0,0,.1), rgba(0,0,0,.5)"
+            @click="$router.push(`/Album/${album.ID}`)"
+          >
+          </v-img>
+          <v-sheet
+            v-else
+            height="200px"
+            color="grey"
+            @click="$router.push(`/Album/${album.ID}`)"
+          >
+          </v-sheet>
+
+          <v-card-title class="text-truncate">{{ album.name }}</v-card-title>
+          <v-card-subtitle
+            class="text-truncate"
+            v-if="album.description != ''"
+            >{{ album.description }}</v-card-subtitle
+          >
+          <v-card-subtitle class="text-truncate" v-else
+            >No description</v-card-subtitle
+          >
         </v-card>
       </v-col>
     </v-row>
