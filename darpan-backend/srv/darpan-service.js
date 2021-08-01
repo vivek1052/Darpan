@@ -341,12 +341,12 @@ class DarpanService extends cds.ApplicationService {
       recursive: true,
     });
 
-    if (_data.mimeType.startsWith(`image`)) {
+    let _scaleWidth = false;
+    if (_data.dimensions.width_orient <= _data.dimensions.height_orient) {
+      _scaleWidth = true;
+    }
 
-      let _scaleWidth = false;
-      if (_data.dimensions.width_orient <= _data.dimensions.height_orient) {
-        _scaleWidth = true;
-      }
+    if (_data.mimeType.startsWith(`image`)) {
 
       try {
         await this.generateImageThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, `${_data.hash}_240.jpg`), _scaleWidth ? '240x?' : '?x240', Number(_data.dimensions.orientation));
@@ -362,7 +362,7 @@ class DarpanService extends cds.ApplicationService {
 
       try {
         console.log('Generating live video file');
-        await this.generateVideoThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `.mp4`));
+        await this.generateVideoThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `.mp4`), _scaleWidth ? '240x?' : '?x240');
       } catch (error) {
         console.error('Couldnt generate live video file');
       }
@@ -430,7 +430,7 @@ class DarpanService extends cds.ApplicationService {
     return;
   }
 
-  async generateVideoThumbnail(_sourceFile, _outputFile) {
+  async generateVideoThumbnail(_sourceFile, _outputFile, _size) {
     return new Promise(resolve => {
       ffmpeg(_sourceFile)
         .on(`end`, () => {
@@ -439,7 +439,7 @@ class DarpanService extends cds.ApplicationService {
         .videoCodec('libx264')
         .withNoAudio()
         .withOutputFPS(10)
-        .withSize('20%')
+        .withSize(_size)
         .withFrames(50)
         .save(_outputFile);
     });
