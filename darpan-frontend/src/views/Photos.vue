@@ -49,7 +49,7 @@
         }"
       >
         <photo-section
-          v-if="section.files && section.files.length != 0"
+          v-if="section.visible"
           :files="section.files"
           @photoClicked="
             (j) => {
@@ -59,6 +59,7 @@
             }
           "
           @heightCalculated="(h) => (section.height = h)"
+          @selectionChanged="selectionChanged"
         >
           <template v-slot:header>
             <h3 class="title">
@@ -110,6 +111,7 @@ export default {
         sectionIndex: 0,
         photoIndex: 0,
       },
+      photosSelected: [],
     };
   },
   components: {
@@ -118,16 +120,6 @@ export default {
     masslocationEdit,
     Lightbox,
     addToAlbum,
-  },
-  computed: {
-    photosSelected: function () {
-      const _photosSelected = [];
-      for (const _section of this.sections) {
-        const _selPhotos = _section.files.filter((_file) => _file.selected);
-        _photosSelected.push(..._selPhotos.map((_selPhoto) => _selPhoto.hash));
-      }
-      return _photosSelected;
-    },
   },
   mounted() {
     axios
@@ -139,6 +131,7 @@ export default {
           sec.height = 1.5 * sec.count * 0.3 * 0.3 * window.innerWidth;
           sec.files = [];
           sec.filesStillRequired = true;
+          sec.visible = false;
           this.sections.push(sec);
         }
       })
@@ -160,8 +153,17 @@ export default {
       }
     },
 
+    selectionChanged() {
+      const _photosSelected = [];
+      for (const _section of this.sections) {
+        const _selPhotos = _section.files.filter((_file) => _file.selected);
+        _photosSelected.push(..._selPhotos.map((_selPhoto) => _selPhoto.hash));
+      }
+      this.photosSelected = _photosSelected;
+    },
+
     async unplugSection(index) {
-      this.sections[index].files = [];
+      this.sections[index].visible = false;
       this.sections[index].filesStillRequired = false;
       return;
     },
@@ -174,8 +176,8 @@ export default {
 
       if (!sec.filesStillRequired) return;
 
-      if (this.sectionBuffer[index] && this.sectionBuffer[index].length != 0) {
-        sec.files = this.sectionBuffer[index];
+      if (sec.files && sec.files.length != 0) {
+        sec.visible = true;
       } else {
         const m = moment(sec.takenMonth);
         const filter = m.isValid()
@@ -188,7 +190,7 @@ export default {
           `/darpan/Files?$apply=filter(${filter} and deleted ne true)&$orderby=takenDateTime desc`
         );
         sec.files = res.data.value;
-        this.sectionBuffer[index] = sec.files;
+        sec.visible = true;
       }
       return;
     },

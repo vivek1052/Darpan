@@ -107,13 +107,14 @@ export default {
       } else {
         this.selectAllCheckbox = false;
       }
+
+      this.$emit("selectionChanged");
     },
     onSelectAllCheckboxChange(value) {
-      if (value) {
-        this.photos.forEach((_photo) => (_photo.selected = true));
-      } else {
-        this.photos.forEach((_photo) => (_photo.selected = false));
+      for (const _photo of this.photos) {
+        _photo.selected = value;
       }
+      this.$emit("selectionChanged");
     },
 
     addSizeInfo(_imagesMetadata) {
