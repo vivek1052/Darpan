@@ -78,6 +78,7 @@ class DarpanService extends cds.ApplicationService {
               status.warn,
               `${_fileMetadata.FileName} already exists!.`
             );
+            await _tx.commit();
             continue;
           }
         } catch (error) {
@@ -92,6 +93,7 @@ class DarpanService extends cds.ApplicationService {
           await this.fileOperations(_data, _fileMetadata);
         } catch (error) {
           console.log(error);
+          await _tx.commit();
           continue;
         }
 
@@ -328,6 +330,7 @@ class DarpanService extends cds.ApplicationService {
         await _tx.rollback();
       }
     }
+
     return;
   }
 
@@ -575,6 +578,7 @@ class DarpanService extends cds.ApplicationService {
         this.reIndexAsync(req, [hash]);
       }
     }
+    _tx.commit();
     return;
   }
 
