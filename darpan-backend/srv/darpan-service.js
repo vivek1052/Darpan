@@ -31,7 +31,7 @@ class DarpanService extends cds.ApplicationService {
       this.importAsync(_req);
     });
     this.on(`Reindex`, _req => {
-      const { hashes } = req.data;
+      const { hashes } = _req.data;
       this.reIndexAsync(_req, hashes);
     });
     this.on(`GetImportFolders`, this.onGetImportFolders);
