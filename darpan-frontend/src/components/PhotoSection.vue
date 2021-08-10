@@ -23,6 +23,24 @@
             margin: '0px',
           }"
         >
+          <v-tooltip
+            bottom
+            v-if="
+              photo.status_reIndex_code == 2 || photo.status_reIndex_code == 3
+            "
+          >
+            <template v-slot:activator="{ on, attrs }">
+              <v-icon
+                v-on="on"
+                v-bind="attrs"
+                :color="photo.status_reIndex_code == 2 ? 'warning' : 'error'"
+                class="icon-Photo"
+                >mdi-alert-circle-outline</v-icon
+              >
+            </template>
+            <span>{{ photo.status_reIndex.desc }}</span>
+          </v-tooltip>
+
           <v-checkbox
             v-model="photo.selected"
             light
@@ -202,6 +220,14 @@ export default {
   left: 0px;
   margin: 0px;
   padding: 0px;
+  z-index: 1;
+}
+.icon-Photo {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  margin: 4px;
+  padding: 4px;
   z-index: 1;
 }
 </style>

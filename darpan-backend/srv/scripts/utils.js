@@ -66,6 +66,9 @@ module.exports.transformData = async (_hash, _fileMetadata) => {
       srcMap: null,
     },
     status: {
+      reIndex: {
+        code: 1
+      },
       deleted: false
     }
 
@@ -179,12 +182,12 @@ module.exports.searchPlaces = async (req) => {
 
 module.exports.fileUpdateAsync = async (req, next) => {
 
-  const _tx = cds.tx(req);
+  const _srv = await cds.connect.to('db');
 
   debugger
   const { hash, takenDateTime, gps_latitudeRef, gps_latitude, gps_longitudeRef, gps_longitude } = req.data;
 
-  const _file = await _tx.read(_tx.entities.Files).byKey(hash);
+  const _file = await _srv.read(_srv.entities.Files).byKey(hash);
 
   const _args = [];
   if (takenDateTime) {
@@ -209,12 +212,11 @@ module.exports.fileUpdateAsync = async (req, next) => {
   if (_args.length != 0) {
     try {
       await updateExifProperty(path.join(config.exportPath, _file.path, _file.name), _args);
-      _file.status.reIndex = 1;
+      _file.status_reIndex_code = 2;
     } catch (error) {
-      _file.status.reIndex = 3;
+      _file.status_reIndex_code = 3;
     }
-    await _tx.update(_tx.entities.Files, hash).with(_file);
-    _tx.commit();
+    await _srv.update(_srv.entities.Files, hash).with(_file);
     return;
   } else {
     return next();

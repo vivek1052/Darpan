@@ -29,11 +29,7 @@ async function reIndexAsync() {
 
     const _srv = await cds.connect.to('db');
 
-    const _tx = _srv.tx({
-        user: new Admin(userName)
-    });
-
-    const _files = await _tx.read(_tx.entities.Files).where({
+    const _files = await _srv.read(_srv.entities.Files).where({
         hash: hashes,
     });
 
@@ -49,10 +45,9 @@ async function reIndexAsync() {
         if (_filesMetadata.length == 0) {
             console.error("File doesnt exist anymore. Deleting from database");
             try {
-                await _tx.delete(_tx.entities.Files).byKey({
+                await _srv.delete(_srv.entities.Files).byKey({
                     hash: _file.hash,
                 });
-                await _tx.commit();
                 continue;
             } catch (error) {
                 console.log(error);
@@ -73,21 +68,24 @@ async function reIndexAsync() {
         }
 
         //Crush update DB
+        const _tx = _srv.tx({
+            user: new Admin(userName)
+        });
         try {
             if (_data.addressCategories) {
                 try {
-                    await _tx.delete(_tx.entities.Address_Categories).where({
+                    await _tx.delete(_srv.entities.Address_Categories).where({
                         file_hash: _data.hash
                     });
                 } catch (error) {
                     //Didnt exist
                 }
 
-                await _tx.create(_tx.entities.Address_Categories).entries(_data.addressCategories);
+                await _tx.create(_srv.entities.Address_Categories).entries(_data.addressCategories);
                 delete _data.addressCategories;
             }
 
-            await _tx.update(_tx.entities.Files, _data.hash).with(_data);
+            await _tx.update(_srv.entities.Files, _data.hash).with(_data);
             await _tx.commit();
         } catch (error) {
             console.log(error);

@@ -20,10 +20,6 @@ async function importAsync() {
 
     const _srv = await cds.connect.to('db');
 
-    const _tx = _srv.tx({
-        user: new Admin(userName)
-    });
-
     const _nestedFolders = await getDirRecursive(folder || `/`);
 
     _nestedFolders.sort((a, b) => b.length - a.length);
@@ -45,12 +41,11 @@ async function importAsync() {
             //Check if file already exist
             try {
                 if (
-                    await _tx.read(_tx.entities.Files).byKey(_hash)
+                    await _srv.read(_srv.entities.Files).byKey(_hash)
                 ) {
                     console.log(
                         `${_fileMetadata.FileName} already exists!.`
                     );
-                    await _tx.commit();
                     continue;
                 }
             } catch (error) {
@@ -65,13 +60,15 @@ async function importAsync() {
                 await fileOperations(_data, _fileMetadata);
             } catch (error) {
                 console.log(error);
-                await _tx.commit();
                 continue;
             }
 
             //Update DB
             try {
-                await _tx.create(_tx.entities.Files).entries(_data);
+                const _tx = _srv.tx({
+                    user: new Admin(userName)
+                });
+                await _tx.create(_srv.entities.Files).entries(_data);
                 await _tx.commit();
             } catch (error) {
                 console.log(error);

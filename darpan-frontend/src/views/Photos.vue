@@ -187,7 +187,7 @@ export default {
           : `takenDateTime eq null`;
 
         const res = await axios.get(
-          `/darpan/Files?$apply=filter(${filter} and status_deleted ne true)&$orderby=takenDateTime desc`
+          `/darpan/Files?$apply=filter(${filter} and status_deleted ne true)&$orderby=takenDateTime desc&$expand=status_reIndex`
         );
         sec.files = res.data.value;
         sec.visible = true;
