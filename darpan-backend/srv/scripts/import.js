@@ -3,7 +3,9 @@ const cds = require(`@sap/cds`);
 const path = require(`path`);
 const md5 = require(`md5-file`);
 const fs = require(`fs`);
-const { getDirRecursive, getFilesMetadata, transformData, fileOperations } = require(`./utils`);
+const { transformData } = require(`./utils`);
+const { getDirRecursive, fileOperations } = require('./FileSystemUtils');
+const { getFilesMetadata } = require('./exifToolUtils');
 const { Admin } = require(`./userRoles`);
 const config = require(`../config.json`);
 
@@ -22,7 +24,7 @@ async function importAsync() {
         user: new Admin(userName)
     });
 
-    const _nestedFolders = getDirRecursive(folder || `/`);
+    const _nestedFolders = await getDirRecursive(folder || `/`);
 
     _nestedFolders.sort((a, b) => b.length - a.length);
 
@@ -31,7 +33,7 @@ async function importAsync() {
 
         console.log(`Importing photos from ${_importPath}`);
 
-        const _filesMetadata = getFilesMetadata(_importPath);
+        const _filesMetadata = await getFilesMetadata(_importPath);
 
         for (const _fileMetadata of _filesMetadata) {
 

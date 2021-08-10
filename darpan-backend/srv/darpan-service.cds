@@ -14,7 +14,7 @@ service DarpanService {
             grant : 'READ',
             to    : 'user'
         },
-    ]) as projection on db.Files;
+    ])                           as projection on db.Files;
 
 
     entity Albums @(restrict : [
@@ -29,7 +29,7 @@ service DarpanService {
             grant : 'READ',
             to    : 'user'
         },
-    ]) as projection on db.Albums;
+    ])                           as projection on db.Albums;
 
     entity Media_Album_Link @(restrict : [
         {
@@ -43,8 +43,9 @@ service DarpanService {
             grant : 'READ',
             to    : 'user'
         },
-    ]) as projection on db.Media_Album_Link;
+    ])                           as projection on db.Media_Album_Link;
 
+    entity ReIndexCode @readonly as projection on db.ReIndexCode;
     action Import @(requires : 'admin')(folder : String);
     action Reindex @(requires : 'admin')(hashes : many String(32));
     action DeletePermanently @(requires : 'admin')(hashes : many String(32));

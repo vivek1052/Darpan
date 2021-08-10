@@ -5,6 +5,11 @@ using {
 
 namespace sap.capire.darpan;
 
+entity ReIndexCode {
+    key code : Integer;
+        desc : String(64);
+}
+
 entity Files : managed {
     key hash              : String(32);
         name              : String(128);
@@ -56,7 +61,11 @@ entity Files : managed {
         };
         addressCategories : Composition of many Address_Categories
                                 on addressCategories.file = $self;
-        deleted           : Boolean;
+        status            : {
+            reIndex       : Association to ReIndexCode;
+            deleted       : Boolean;
+        };
+
         albums            : Composition of many Media_Album_Link
                                 on albums.file = $self;
 }

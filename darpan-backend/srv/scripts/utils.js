@@ -1,86 +1,11 @@
-const exiftool = require(`dist-exiftool`);
-const execFile = require(`child_process`).execFileSync;
-const fs = require(`fs`);
+const cds = require(`@sap/cds`);
 const path = require(`path`);
 const moment = require('moment');
 const axios = require('axios');
-const ffmpeg_static = require(`ffmpeg-static`);
-const ffprobe_static = require(`ffprobe-static`);
-const ffmpeg = require(`fluent-ffmpeg`);
 const config = require(`../config.json`);
-
-config.importPath = path.resolve(config.importPath);
+const { updateExifProperty } = require(`./exifToolUtils`);
 config.exportPath = path.resolve(config.exportPath);
-config.staticMapPath = path.resolve(config.staticMapPath);
-config.thumnailPath = path.resolve(config.thumnailPath);
 
-ffmpeg.setFfmpegPath(ffmpeg_static);
-ffmpeg.setFfprobePath(ffprobe_static.path);
-
-module.exports.getFilesMetadata = (_path) => {
-  console.info("Reading media metadata");
-  try {
-    const _response = execFile(exiftool, [
-      `-j`,
-      `-n`,
-      `-FileName`,
-      `-Directory`,
-      `-FileSize`,
-      `-FileType`,
-      `-FileTypeExtension`,
-      `-MIMEType`,
-      `-DateTimeOriginal`,
-      `-CreateDate`,
-      `-MediaCreateDate`,
-      `-OffsetTimeOriginal`,
-      `-TimeZone`,
-      `-Duration`,
-      `-MediaDuration`,
-      `-ImageWidth`,
-      `-ImageHeight`,
-      `-Orientation`,
-      `-Make`,
-      `-Model`,
-      `-GPSLatitudeRef`,
-      `-GPSLatitude`,
-      `-GPSLongitudeRef`,
-      `-GPSLongitude`,
-      `-GPSAltitudeRef`,
-      `-GPSAltitude`,
-      `-Rotation`,
-      _path,
-    ]);
-
-    return JSON.parse(_response.toString());
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-};
-
-module.exports.updateExifProperty = (_path, _keyValue) => {
-  const _args = [];
-  _args.push(..._keyValue);
-  _args.push(`-overwrite_original_in_place`);
-  _args.push(_path);
-  const _response = execFile(exiftool, _args);
-  console.log(_response.toString());
-}
-
-module.exports.getDirRecursive = (_path = "/") => {
-  const _files = fs.readdirSync(path.join(config.importPath, _path), {
-    withFileTypes: true,
-  });
-
-  const _dirs = _files.filter((_file) => _file.isDirectory());
-  const _output = [];
-  _output.push(path.join(_path));
-  for (let index = 0; index < _dirs.length; index++) {
-    const _dir = path.join(_path, _dirs[index].name);
-    _output.push(...this.getDirRecursive(_dir));
-  }
-  return _output;
-};
 
 module.exports.transformData = async (_hash, _fileMetadata) => {
 
@@ -140,7 +65,10 @@ module.exports.transformData = async (_hash, _fileMetadata) => {
       srcOriginal: null,
       srcMap: null,
     },
-    deleted: false
+    status: {
+      deleted: false
+    }
+
   };
 
   //Original date time
@@ -224,180 +152,72 @@ module.exports.transformData = async (_hash, _fileMetadata) => {
   return _data;
 }
 
-module.exports.fileOperations = async (_data, _fileMetadata) => {
-  //Generate thumbnails for images
-
-  const _thumbnailPath = path.join(
-    config.thumnailPath,
-    _data.hash.slice(0, 1),
-    _data.hash.slice(1, 2),
-    _data.hash.slice(2, 3)
-  );
-
-  await fs.promises.mkdir(_thumbnailPath, {
-    recursive: true,
-  });
-
-  let _scaleWidth = false;
-  if (_data.dimensions.width_orient <= _data.dimensions.height_orient) {
-    _scaleWidth = true;
-  }
-
-  if (_data.mimeType.startsWith(`image`)) {
-
-    try {
-      await generateImageThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, `${_data.hash}_240.jpg`), _scaleWidth ? '240x?' : '?x240', Number(_data.dimensions.orientation));
-      await generateImageThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, `${_data.hash}_1280.jpg`), _scaleWidth ? '?x1280' : '1280x?', Number(_data.dimensions.orientation));
-      console.log("Thumbnails generated");
-    } catch (error) {
-      console.error('Thumbnail couldnt be generated');
-    }
-
-  }
-  //Generate thumbnail for video.
-  else if (_data.mimeType.startsWith(`video`)) {
-
-    try {
-      console.log('Generating live video file');
-      await generateVideoThumbnail(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `.mp4`), _scaleWidth ? '240x?' : '?x240');
-    } catch (error) {
-      console.error('Couldnt generate live video file');
-    }
-
-
-    //Transcode video other than mp4 in mp4
-    if (config.transcodedFormats.includes(_data.format)) {
-      try {
-        console.log(`Transcoding ${_fileMetadata.FileName} to MP4`);
-        await transcodeVideo(_fileMetadata.SourceFile, path.join(_thumbnailPath, _data.hash + `_transcoded.mp4`));
-      } catch (error) {
-        console.log('Couldnt transcode video');
+module.exports.searchPlaces = async (req) => {
+  try {
+    const { query, at } = req.data;
+    const res = await axios.get(`https://autosuggest.search.hereapi.com/v1/autosuggest`, {
+      params: {
+        apikey: process.env.MAPAPIKEY,
+        at: at,
+        q: query
       }
-    }
-  }
-
-  //Generate Static maps
-  if (_data.gps.latitudeRef && _data.gps.latitude && _data.gps.longitudeRef && _data.gps.longitude) {
-    console.log(`Geolocation found. Generating Static map`);
-    const lat = _data.gps.latitudeRef == 'N' ? _data.gps.latitude : _data.gps.latitude * -1;
-    const lon = _data.gps.longitudeRef == 'E' ? _data.gps.longitude : _data.gps.longitude * -1;
-    const _staticMapPath = path.join(
-      config.staticMapPath,
-      _data.hash.slice(0, 1),
-      _data.hash.slice(1, 2),
-      _data.hash.slice(2, 3)
-    );
-
-    //Make thumbnail path
-    await fs.promises.mkdir(_staticMapPath, {
-      recursive: true,
     });
+    return res.data.items.map(item => {
+      return {
+        name: item.title,
+        address: item.address.label,
+        latRef: item.position.lat > 0 ? 'N' : 'S',
+        lat: Math.abs(item.position.lat),
+        longRef: item.position.lng > 0 ? 'E' : 'W',
+        lon: Math.abs(item.position.lng)
+      }
+    })
+  } catch (err) {
+    return [];
+  }
+}
 
+module.exports.fileUpdateAsync = async (req, next) => {
+
+  const _tx = cds.tx(req);
+
+  debugger
+  const { hash, takenDateTime, gps_latitudeRef, gps_latitude, gps_longitudeRef, gps_longitude } = req.data;
+
+  const _file = await _tx.read(_tx.entities.Files).byKey(hash);
+
+  const _args = [];
+  if (takenDateTime) {
+    const _newDate = moment(takenDateTime);
+    if (_file && _newDate.isValid()) {
+      //Update Date to photo tags
+      _args.push(`-DateTimeOriginal="${_newDate.format("YYYY:MM:DD HH:mm:ss")}"`);
+      _args.push(`-OffsetTimeOriginal="${_newDate.format('Z')}"`);
+    }
+  }
+
+  if (gps_latitudeRef && gps_latitude && gps_longitudeRef && gps_longitude) {
+    if (_file) {
+      //Update gps co-ordinates to photo tags
+      _args.push(`-GPSLatitudeRef=${gps_latitudeRef}`);
+      _args.push(`-GPSLatitude=${Number(gps_latitude)}`);
+      _args.push(`-GPSLongitudeRef=${gps_longitudeRef}`);
+      _args.push(`-GPSLongitude=${Number(gps_longitude)}`);
+    }
+  }
+
+  if (_args.length != 0) {
     try {
-      const res = await axios.get(`https://image.maps.ls.hereapi.com/mia/1.6/mapview`, {
-        responseType: 'stream',
-        params: {
-          apikey: process.env.MAPAPIKEY,
-          lat: lat,
-          lon: lon,
-          z: 15,
-          w: 600,
-          h: 400,
-          i: ''
-        }
-
-      });
-
-      res.data.pipe(fs.createWriteStream(path.join(_staticMapPath, `${_data.hash}.jpg`)));
+      await updateExifProperty(path.join(config.exportPath, _file.path, _file.name), _args);
+      _file.status.reIndex = 1;
     } catch (error) {
-      console.log(error);
+      _file.status.reIndex = 3;
     }
-
+    await _tx.update(_tx.entities.Files, hash).with(_file);
+    _tx.commit();
+    return;
+  } else {
+    return next();
   }
 
-  //Create export path if not there
-  await fs.promises.mkdir(path.join(config.exportPath, _data.path), { recursive: true });
-
-  //Move file
-  console.log(`Moving file ${_fileMetadata.FileName}`);
-
-  await fs.promises.rename(_fileMetadata.SourceFile,
-    path.join(config.exportPath, _data.path, _data.name));
-
-  return;
-}
-
-async function generateVideoThumbnail(_sourceFile, _outputFile, _size) {
-  return new Promise(resolve => {
-    ffmpeg(_sourceFile)
-      .on(`end`, () => {
-        resolve();
-      })
-      .videoCodec('libx264')
-      .withNoAudio()
-      .withOutputFPS(10)
-      .withSize(_size)
-      .withFrames(50)
-      .save(_outputFile);
-  });
-}
-
-async function transcodeVideo(_sourceFile, _outputFile) {
-  return new Promise(resolve => {
-    ffmpeg(_sourceFile)
-      .on(`end`, () => {
-        resolve();
-      })
-      .videoCodec('libx264')
-      .save(_outputFile);
-  });
-}
-
-async function generateImageThumbnail(_sourceFile, _outputFile, _size, _rotation) {
-  const orientation = [];
-
-  switch (_rotation) {
-    case 1:
-      //Normal image
-      break;
-    case 2:
-      orientation.push('transpose=cclock_flip');
-      orientation.push('transpose=clock');
-      break;
-    case 3:
-      orientation.push('transpose=clock');
-      orientation.push('transpose=clock');
-      break;
-    case 4:
-      orientation.push('transpose=cclock_flip');
-      orientation.push('transpose=cclock');
-      break;
-    case 5:
-      orientation.push('transpose=clock_flip');
-      orientation.push('transpose=clock');
-      orientation.push('transpose=clock');
-      break;
-    case 6:
-      orientation.push('transpose=clock');
-      break;
-    case 7:
-      orientation.push('transpose=clock_flip');
-      break;
-    case 8:
-      orientation.push('transpose=cclock');
-    default:
-      break;
-  }
-  return new Promise(resolve => {
-    const _image = ffmpeg(_sourceFile)
-      .on(`end`, () => {
-        resolve();
-      })
-      .size(`?x${_size}`);
-
-    for (const orient of orientation) {
-      _image.videoFilter(orient);
-    }
-    _image.save(_outputFile);
-  });
 }

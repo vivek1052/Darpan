@@ -1,32 +1,38 @@
+require('dotenv').config();
 const cds = require(`@sap/cds`);
 const path = require(`path`);
-const { getFilesMetadata, transformData, fileOperations } = require(`./utils`)
+const { transformData } = require(`./utils`);
+const { fileOperations } = require('./FileSystemUtils');
+const { getFilesMetadata } = require('./exifToolUtils');
 const { Admin } = require(`./userRoles`);
-const config = require(`./config.json`);
+const config = require(`../config.json`);
 
-config.importPath = path.resolve(config.importPath);
+
 config.exportPath = path.resolve(config.exportPath);
-config.staticMapPath = path.resolve(config.staticMapPath);
-config.thumnailPath = path.resolve(config.thumnailPath);
 
-async function reIndexAsync(hashes) {
+
+async function reIndexAsync() {
     debugger;
 
     const userName = process.argv[2];
+
     const hashes = [];
-    for (let i = 2; i < process.argv.length; i++) {
+    for (let i = 3; i < process.argv.length; i++) {
         hashes.push(process.argv[i]);
     }
-
-    const _srv = cds.connect.to('db');
-
-    const _tx = _srv.tx({
-        user: Admin(userName)
-    });
 
     if (hashes.length == 0) {
         return;
     }
+
+    console.log(`Re-Indexing ${hashes.length} files`);
+
+    const _srv = await cds.connect.to('db');
+
+    const _tx = _srv.tx({
+        user: new Admin(userName)
+    });
+
     const _files = await _tx.read(_tx.entities.Files).where({
         hash: hashes,
     });
@@ -36,7 +42,7 @@ async function reIndexAsync(hashes) {
         //Read current metadata
         console.log(`Reading Metadata for ${_file.name}`);
 
-        const _filesMetadata = getFilesMetadata(
+        const _filesMetadata = await getFilesMetadata(
             path.join(config.exportPath, _file.path, _file.name)
         );
 
@@ -81,10 +87,10 @@ async function reIndexAsync(hashes) {
                 delete _data.addressCategories;
             }
 
-            await _tx.update(this.entities.Files, _data.hash).with(_data);
+            await _tx.update(_tx.entities.Files, _data.hash).with(_data);
             await _tx.commit();
         } catch (error) {
-            this.log(status.error, error);
+            console.log(error);
             await _tx.rollback();
         }
     }
@@ -92,4 +98,4 @@ async function reIndexAsync(hashes) {
     return;
 }
 
-await reIndexAsync();
+reIndexAsync();
