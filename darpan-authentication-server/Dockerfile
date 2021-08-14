@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 4000
 
-CMD ["sh","start.sh"]
+CMD ["node","server.js"]
