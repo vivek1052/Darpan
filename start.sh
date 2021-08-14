@@ -1,9 +1,11 @@
 #!/usr/bin/bash
 
-cd ./darpan-authentication-server
+service nginx start &
+
+cd /darpan-authentication-server
 
 node server.js &
 
-cd ./darpan-backend
+cd /darpan-backend
 
 cds run

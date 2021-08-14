@@ -1,5 +1,16 @@
 FROM node:alpine
 
+#Nginx reverse proxy and static file server
+WORKDIR /
+
+RUN apk add nginx
+
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
+
+RUN mkdir /UI-Static-Files
+
+COPY ./nginx/UI-Static-Files /UI-Static-Files
+
 # Authentication Server
 WORKDIR /darpan-authentication-server
 
