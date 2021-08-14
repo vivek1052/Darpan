@@ -16,22 +16,22 @@ RUN mkdir -p /Pictures/Import
 
 RUN mkdir -p /darpan-backend/db/sqlite
 
-RUN npm install -g @sap/cds-dk
+# RUN npm install -g @sap/cds-dk
 
 COPY ./darpan-backend/package.json ./
 
-RUN apk add perl
+# RUN apk add perl
 
-RUN apk add --no-cache --virtual .gyp \
-        python2 \
-        make \
-        g++ \
-    && npm install \
-    && apk del .gyp
+# RUN apk add --no-cache --virtual .gyp \
+#         python2 \
+#         make \
+#         g++ \
+#     && npm install \
+#     && apk del .gyp
 
 COPY ./darpan-backend .
 
-RUN cds deploy --to sqlite:/darpan-backend/db/sqlite/index.db
+# RUN cds deploy --to sqlite:/darpan-backend/db/sqlite/index.db
 
 VOLUME /darpan-backend/db/sqlite
 
