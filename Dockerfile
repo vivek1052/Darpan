@@ -35,4 +35,8 @@ VOLUME /darpan-backend/db/sqlite
 
 EXPOSE 4004
 
+WORKDIR /
+
+COPY ./start.sh ./
+
 CMD [ "sh", "./start.sh" ]
