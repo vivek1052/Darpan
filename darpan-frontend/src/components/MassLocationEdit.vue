@@ -69,19 +69,32 @@ export default {
   },
   methods: {
     onQuery() {
-      navigator.geolocation.getCurrentPosition((position) => {
-        axios
-          .get(
-            `/darpan/SearchPlaces(query='${this.query}',at='${position.coords.latitude},${position.coords.longitude}')`
-          )
-          .then((res) => {
-            this.queryResult = res.data.value;
-          })
-          .catch((err) => {
-            console.log(err);
-            this.$toasted("Error occured");
-          });
-      });
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          axios
+            .get(
+              `/darpan/SearchPlaces(query='${this.query}',at='${position.coords.latitude},${position.coords.longitude}')`
+            )
+            .then((res) => {
+              this.queryResult = res.data.value;
+            })
+            .catch((err) => {
+              console.log(err);
+              this.$toasted("Error occured");
+            });
+        },
+        () => {
+          axios
+            .get(`/darpan/SearchPlaces(query='${this.query}',at='')`)
+            .then((res) => {
+              this.queryResult = res.data.value;
+            })
+            .catch((err) => {
+              console.log(err);
+              this.$toasted("Error occured");
+            });
+        }
+      );
     },
     onLocationSelected() {
       debugger;

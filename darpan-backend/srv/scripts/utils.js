@@ -161,7 +161,7 @@ module.exports.searchPlaces = async (req) => {
     const res = await axios.get(`https://autosuggest.search.hereapi.com/v1/autosuggest`, {
       params: {
         apikey: process.env.MAPAPIKEY,
-        at: at,
+        at: at ? at : `20.5937,78.9629`,
         q: query
       }
     });
