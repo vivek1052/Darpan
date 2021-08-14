@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-service nginx start &
+nginx
 
 cd /darpan-authentication-server
 
