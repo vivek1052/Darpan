@@ -1,29 +1,17 @@
 version: "3"
 
 services:
-  darpan-nginx:
-    image: darpan/nginx
-    build: ./nginx
+  darpan:
+    image: darpan
+    build: .
     ports:
       - "80:80"
-    volumes:
-      - "/ext/Pictures:/Pictures"
-
-  darpan-backend:
-    image: darpan/backend
-    build: ./darpan-backend
     volumes:
       - "/ext/Pictures:/Pictures"
       - "darpanDB:/darpan-backend/db/sqlite"
     environment:
       - SECRET=$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPd
       - MAPAPIKEY=MOI3HYNBtHgay8O6XUEnFT24lL8KMt1jWq8Zo4mHEm4
-
-  darpan-authentication-server:
-    image: darpan/authentication-server
-    build: ./darpan-authentication-server
-    environment:
-      - SECRET=$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPd
 
 volumes:
   darpanDB:
