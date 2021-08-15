@@ -1,30 +1,18 @@
 FROM node:slim
 
-#Nginx reverse proxy and static file server
 WORKDIR /
-
-# RUN mkdir -p /run/nginx
-
-# RUN apk add nginx
 
 RUN apt-get -y update 
 
-RUN apt-get -y install nginx 
+RUN apt-get -y install nginx perl ffmpeg
 
+#Nginx reverse proxy and static file server
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
+#Ui Files
 RUN mkdir /UI-Static-Files
 
-COPY ./nginx/UI-Static-Files /UI-Static-Files
-
-# Authentication Server
-WORKDIR /darpan-authentication-server
-
-COPY ./darpan-authentication-server .
-
-RUN npm install
-
-EXPOSE 4000
+COPY ./darpan-frontend/dist /UI-Static-Files
 
 # Backend server
 WORKDIR /darpan-backend
@@ -35,18 +23,7 @@ RUN mkdir -p /darpan-backend/db/sqlite
 
 RUN npm install -g @sap/cds-dk
 
-# RUN apk add perl
-
-RUN apt-get -y install perl
-
 COPY ./darpan-backend .
-
-# RUN apk add --no-cache --virtual .gyp \
-#         python2 \
-#         make \
-#         g++ \
-#     && npm install \
-#     && apk del .gyp
 
 RUN npm install
 
@@ -54,10 +31,10 @@ RUN cds deploy --to sqlite:/darpan-backend/db/sqlite/index.db
 
 VOLUME /darpan-backend/db/sqlite
 
-EXPOSE 4004
-
 WORKDIR /
 
 COPY ./start.sh ./
+
+EXPOSE 80
 
 CMD [ "sh", "./start.sh" ]

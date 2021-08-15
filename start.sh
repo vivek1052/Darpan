@@ -2,10 +2,8 @@
 
 nginx
 
-cd /darpan-authentication-server
-
-node server.js &
-
 cd /darpan-backend
+
+node authenticationServer.js &
 
 cds run
