@@ -1,9 +1,9 @@
-const ffmpeg_static = require(`ffmpeg-static`);
-const ffprobe_static = require(`ffprobe-static`);
+// const ffmpeg_static = require(`ffmpeg-static`);
+// const ffprobe_static = require(`ffprobe-static`);
 const ffmpeg = require(`fluent-ffmpeg`);
 
-ffmpeg.setFfmpegPath(ffmpeg_static);
-ffmpeg.setFfprobePath(ffprobe_static.path);
+// ffmpeg.setFfmpegPath(ffmpeg_static);
+// ffmpeg.setFfprobePath(ffprobe_static.path);
 
 module.exports.generateVideoThumbnail = async (_sourceFile, _outputFile, _size) => {
     return new Promise(resolve => {
