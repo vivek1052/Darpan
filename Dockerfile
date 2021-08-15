@@ -1,11 +1,15 @@
-FROM node:alpine
+FROM node:slim
 
 #Nginx reverse proxy and static file server
 WORKDIR /
 
-RUN mkdir -p /run/nginx
+# RUN mkdir -p /run/nginx
 
-RUN apk add nginx
+# RUN apk add nginx
+
+RUN apt-get -y update 
+
+RUN apt-get -y install nginx 
 
 COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
 
@@ -31,16 +35,20 @@ RUN mkdir -p /darpan-backend/db/sqlite
 
 RUN npm install -g @sap/cds-dk
 
-RUN apk add perl
+# RUN apk add perl
+
+RUN apt-get -y install perl
 
 COPY ./darpan-backend .
 
-RUN apk add --no-cache --virtual .gyp \
-        python2 \
-        make \
-        g++ \
-    && npm install \
-    && apk del .gyp
+# RUN apk add --no-cache --virtual .gyp \
+#         python2 \
+#         make \
+#         g++ \
+#     && npm install \
+#     && apk del .gyp
+
+RUN npm install
 
 RUN cds deploy --to sqlite:/darpan-backend/db/sqlite/index.db
 
