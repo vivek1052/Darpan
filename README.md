@@ -98,7 +98,7 @@ https://user-images.githubusercontent.com/42589837/173921764-d4388a95-f01f-4add-
 <img width="960" alt="Snag_ba6e9f" src="https://user-images.githubusercontent.com/42589837/173923056-180db58a-4ad0-4f35-a159-5ce9f00f6198.png">
 </kbd>
 
-# Architecture
+## Architecture
 
 The application is segreated in three containers
 - Nginx Proxy
@@ -108,3 +108,8 @@ The application is segreated in three containers
 Nginx proxy acts as facade for the incoming http requests. It redirects requests to the respective containers which are backend and authentication server.
 It also serves static files such as UI files( Compiled using Vuejs) and images including thumbnails, Original images and static map images. This reduces the network latency significantly as it is not dependent on the SAP CAP backend for file serving.
 The image files are hidden behind authentication server so unauthorized access can be prevented. Each request for the file has to be passed with JWT token which will be verified using Authentication-Server and after that, Nginx serves the content.
+
+Authentication server acts as both authentication and authorisation server. When user logins with username & password, it is validated it and provides JWT. This JWT is recognised in Backend server. Roles are embedded into the JWT token which backend server uses to allow/disallow data modification.
+This also acts as JWT verification for Nginx file server.
+
+Backend server is written in SAP Capire, which provides Odata functionality 
