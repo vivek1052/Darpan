@@ -112,4 +112,6 @@ The image files are hidden behind authentication server so unauthorized access c
 Authentication server acts as both authentication and authorisation server. When user logins with username & password, it is validated it and provides JWT. This JWT is recognised in Backend server. Roles are embedded into the JWT token which backend server uses to allow/disallow data modification.
 This also acts as JWT verification for Nginx file server.
 
-Backend server is written in SAP Capire, which provides Odata functionality 
+Backend server is written in SAP Capire, which provides Odata functionality. It utilizes multithreading to facilitate background image indexing and other resource intensive tasks. It onlt provides image metadata and queries and doesnt serve the actual media. Actual media is served through Nginx to reduce latency. Exiftool(https://exiftool.org/) is used to retrieve media metadata.
+
+Use at your risk :)
