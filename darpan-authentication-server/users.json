@@ -1,9 +1,9 @@
 [{
     "username": "admin",
-    "password": "$2a$04$woB4lb2ammOGnupBC/Kwze/IwjEQAsUd6bRdkFgcjYZ9/rwFKkb0a",
+    "password": "encrypted password",
     "admin": true
 },{
     "username": "user",
-    "password": "$2a$04$woB4lb2ammOGnupBC/Kwze/IwjEQAsUd6bRdkFgcjYZ9/rwFKkb0a",
+    "password": "encrypted password",
     "admin": false
 }]
