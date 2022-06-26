@@ -17,7 +17,7 @@ services:
       - "darpanDB:/darpan-backend/db/sqlite"
     environment:
       - SECRET=$C&F)J@NcRfUjXn2r5u8x!A%D*G-KaPd
-      - MAPAPIKEY=MOI3HYNBtHgay8O6XUEnFT24lL8KMt1jWq8Zo4mHEm4
+      - MAPAPIKEY="<your map key>"
 
   darpan-authentication-server:
     image: darpan/authentication-server
